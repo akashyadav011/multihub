@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>InfoHub Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <style>
+    body {
+      background: linear-gradient(135deg, #FF9A8B, #FF6F61, #FF3D3A);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    .navbar-brand {
+      font-weight: 600;
+      color: #fff !important;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      border-radius: 15px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    .crypto-logo {
+      width: 50px;
+      height: 50px;
+      object-fit: contain;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
+    .btn-refresh {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      transition: background 0.3s ease;
+    }
+    .btn-refresh:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+    .section-title {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark shadow">
+    <div class="container">
+      <a class="navbar-brand" href="#">InfoHub Dashboard</a>
+    </div>
+  </nav>
+  
+  <div class="container mt-4">
+    <!-- Random Quote -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card p-3 text-center">
+          <h5 class="card-title">Random Quote</h5>
+          <p id="quoteText">"{{ quote.text }}"</p>
+          <p><small id="quoteAuthor">- {{ quote.author }}</small></p>
+          <button class="btn btn-sm btn-refresh" id="refreshQuoteBtn">Refresh</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Random Joke -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="card p-3 text-center">
+          <h5 class="card-title">Random Joke</h5>
+          <p id="jokeText">{{ joke }}</p>
+          <button class="btn btn-sm btn-refresh" id="refreshJokeBtn">Refresh</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Cryptocurrencies -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2 class="section-title">Top Cryptocurrencies</h2>
+      </div>
+      {% for coin in crypto %}
+      <div class="col-md-4 mb-4">
+        <div class="card p-3 text-center">
+          <img src="{{ coin.image }}" alt="{{ coin.name }}" class="crypto-logo">
+          <h5 class="mt-2">{{ coin.name }}</h5>
+          <p>💰 Price: ${{ coin.current_price }}</p>
+          <p>📊 Market Cap: ${{ coin.market_cap|floatformat:0 }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- NASA - Space Images -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2 class="section-title">NASA - Space Images</h2>
+      </div>
+      {% for item in nasa %}
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          {% if item.image %}
+            <img src="{{ item.image }}" class="card-img-top" alt="NASA Image">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ item.title }}</h5>
+            <div id="nasaDesc{{ forloop.counter }}">
+              {{ item.description|slice:":200" }}...
+            </div>
+            <button class="btn btn-refresh btn-sm mt-2" data-bs-toggle="collapse" data-bs-target="#collapseNasa{{ forloop.counter }}" aria-expanded="false" aria-controls="collapseNasa{{ forloop.counter }}">Read More</button>
+            <div class="collapse" id="collapseNasa{{ forloop.counter }}">
+              <div class="card card-body bg-light text-dark">
+                {{ item.description }}
+              </div>
+            </div>
+            <p class="mt-2 text-center"><small>{{ item.date_created }}</small></p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('refreshQuoteBtn').addEventListener('click', function(){
+      fetch('/refresh-quote/')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('quoteText').innerText = '"' + data.text + '"';
+          document.getElementById('quoteAuthor').innerText = '- ' + data.author;
+        })
+        .catch(error => console.error('Error fetching quote:', error));
+    });
+
+    document.getElementById('refreshJokeBtn').addEventListener('click', function(){
+      fetch('/refresh-joke/')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('jokeText').innerText = data.joke;
+        })
+        .catch(error => console.error('Error fetching joke:', error));
+    });
+  </script>
+</body>
+</html>
